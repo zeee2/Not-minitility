@@ -11,6 +11,7 @@ from common.minipad import *
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("blue")
 
+VER = "v1.1"
 
 class App(customtkinter.CTk):
     def __init__(self):
@@ -19,7 +20,7 @@ class App(customtkinter.CTk):
         self.currentProfile = 1
 
         self.title("Minipad Utility (v0.2) *unofficial")
-        self.geometry(f"{800}x{350}")
+        self.geometry(f"{750}x{400}")
         self.resizable(False, False)
 
 
@@ -50,7 +51,7 @@ class App(customtkinter.CTk):
         self.appearance_mode_optionemenu.grid(row=6, column=0, padx=20, pady=(10, 10))
 
 
-        self.tabview = customtkinter.CTkTabview(self, width=500, height=350)
+        self.tabview = customtkinter.CTkTabview(self, width=650, height=340)
         self.tabview.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
         self.tabview.add("설정")
         self.tabview.add("펌웨어")
@@ -60,16 +61,17 @@ class App(customtkinter.CTk):
         self.switch_var1 = customtkinter.StringVar(value="1")
         self.switch_var2 = customtkinter.StringVar(value="1")
         self.switch_var3 = customtkinter.StringVar(value="1")
+
         self.tab_setting_actuationpoint_label = customtkinter.CTkLabel(self.tabview.tab("설정"),
                                                                        text=f"입력 지점",
                                                                        font=customtkinter.CTkFont(size=16, weight="bold"))
-        self.tab_setting_actuationpoint_label.grid(row=0, column=0, padx=20, pady=(20,0), sticky="nsew")
+        self.tab_setting_actuationpoint_label.grid(row=0, column=0, padx=0, pady=(20,0), sticky="nsew")
         self.tab_setting_actuationpoint_value = customtkinter.CTkLabel(self.tabview.tab("설정"),
                                                                        text=f"{(int(controller.MINIPAD_DATA['1']['uh']) - int(controller.MINIPAD_DATA['1']['lh'])) / 100} mm")
         self.tab_setting_actuationpoint_value.grid(row=1, column=0, padx=0, pady=0, sticky="nsew")
         self.tab_setting_actuationpoint_slider = customtkinter.CTkSlider(self.tabview.tab("설정"),orientation="vertical",
                                                                          from_=39, to=1, number_of_steps=39, command=self.actuationpoint_change_event)
-        self.tab_setting_actuationpoint_slider.grid(row=0, column=1, rowspan=3, padx=20, pady=20, sticky="nsew")
+        self.tab_setting_actuationpoint_slider.grid(row=0, column=1, rowspan=3, padx=0, pady=20, sticky="nsew")
 
         self.tab_setting_rapidtrigger_label = customtkinter.CTkLabel(self.tabview.tab("설정"),
                                                                        text=f"래피드 트리거",
@@ -87,10 +89,10 @@ class App(customtkinter.CTk):
     
         self.tab_setting_rapidtrigger_trigger = customtkinter.CTkSwitch(self.tabview.tab("설정"), text="래피드트리거",
                                  variable=self.switch_var1, onvalue="1", offvalue="0", command=self.rapidtrigger_handler)
-        self.tab_setting_rapidtrigger_trigger.grid(row=0, column=6, padx=0, pady=0, sticky="nsew")
+        self.tab_setting_rapidtrigger_trigger.grid(row=0, column=6, padx=(0, 20), pady=0, sticky="nsew")
         self.tab_setting_continuous_rapidtrigger_trigger = customtkinter.CTkSwitch(self.tabview.tab("설정"), text="지속성 래피드트리거",
                                  variable=self.switch_var2, onvalue="1", offvalue="0", command=self.continuous_rapidtrigger_handler)
-        self.tab_setting_continuous_rapidtrigger_trigger.grid(row=1, column=6, padx=0, pady=0, sticky="nsew")
+        self.tab_setting_continuous_rapidtrigger_trigger.grid(row=1, column=6, padx=(0, 20), pady=0, sticky="nsew")
         self.tab_setting_comfirm = customtkinter.CTkButton(self.tabview.tab("설정"), text="적용하기",fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"), command=self.sendAllCmd)
         self.tab_setting_comfirm.grid(row=2, column=6, rowspan=2, padx=0, pady=(20, 20), sticky="nsew")
 
@@ -123,6 +125,10 @@ class App(customtkinter.CTk):
         self.tab_firmware_hid_toggler.grid(row=3, column=1, rowspan=3, padx=(0, 40), pady=(80, 0))
 
 
+        self.current_status = customtkinter.CTkLabel(self, text="진행중인 작업이 없습니다.", width=500, height=32)
+        self.current_status.grid(row=2, column=1, columnspan=2, padx=20, pady=(0, 20), sticky="nesw")
+
+
         self.appearance_mode_optionemenu.set("Dark")
 
         self.profile_button_1.configure(fg_color="#3B8ED0" if ProfileManager.config["Current"] == "1" else "transparent")
@@ -141,7 +147,7 @@ class App(customtkinter.CTk):
             self.tab_setting_continuous_rapidtrigger_trigger.deselect()
         else:
             self.tab_setting_continuous_rapidtrigger_trigger.select()
-        
+
     def calculate_x(self, a_val, b_val):
         x = 0.1 + 0.1 * ((a_val - 390) / -10)
         return x
@@ -206,7 +212,6 @@ class App(customtkinter.CTk):
 
         self.profile_change_after()
 
-
     def profile_handler_2(self):
         self.profile_button_2.configure(fg_color="#3B8ED0")
         self.profile_button_1.configure(fg_color="transparent")
@@ -216,7 +221,6 @@ class App(customtkinter.CTk):
         ProfileManager.save_config()
 
         self.profile_change_after()
-
 
     def profile_handler_3(self):
         self.profile_button_3.configure(fg_color="#3B8ED0")
@@ -228,17 +232,27 @@ class App(customtkinter.CTk):
 
         self.profile_change_after()
 
-
     def change_appearance_mode_event(self, new_appearance_mode: str):
         customtkinter.set_appearance_mode(new_appearance_mode)
 
+    def update_current_status(self):
+        self.current_status.configure(text=f"{len(controller.CMD_LIST)}개의 작업 대기중... '적용하기'를 누르면 작업이 진행됩니다.")
+
     def sendAllCmd(self):
+        if len(controller.CMD_LIST) <= 0:
+            return
+        self.current_status.configure(text=f"{len(controller.CMD_LIST)}개의 작업 진행중...")
+        disabled = [self.profile_button_1, self.profile_button_2, self.profile_button_3, self.tab_setting_comfirm]
+        for ele in disabled:
+            ele.configure(state="disabled")
+        
         commands = []
 
         for cmd in controller.CMD_LIST:
             commands.append(f"hkey.{cmd} {controller.MINIPAD_DATA['1'][cmd]}")
         commands.append("save")
-        controller.multiple_send_command(commands)
+        commands.append("change_display_status")
+        controller.multiple_send_command(commands, self.current_status, [self.profile_button_1, self.profile_button_2, self.profile_button_3, self.tab_setting_comfirm])
 
         controller.CMD_LIST = []
 
@@ -273,6 +287,8 @@ class App(customtkinter.CTk):
             ProfileManager.config[f"Profile_{ProfileManager.config['Current']}"]["uh"] = str(NEW_UH)
             ProfileManager.config[f"Profile_{ProfileManager.config['Current']}"]["lh"] = str(NEW_LH)
 
+            self.update_current_status()
+
     def rapidtrigger_change_up_event(self, val):
         value = round(val / 10, 1)
         NEW_VALUE = int(value * 100)
@@ -288,6 +304,8 @@ class App(customtkinter.CTk):
             ProfileManager.config[f"Profile_{ProfileManager.config['Current']}"]['rtus'] = str(NEW_VALUE)
 
         self.tab_setting_rapidtrigger_value.configure(text = f"up: {value} mm\ndown: {round((int(controller.MINIPAD_DATA['1']['rtds']) / 100), 1)} mm")
+
+        self.update_current_status()
 
     def rapidtrigger_change_down_event(self, val):
         value = round(val / 10, 1)
@@ -305,6 +323,8 @@ class App(customtkinter.CTk):
             
         self.tab_setting_rapidtrigger_value.configure(text = f"up: {round((int(controller.MINIPAD_DATA['1']['rtus']) / 100), 1)} mm\ndown: {value} mm")
 
+        self.update_current_status()
+
     def rapidtrigger_handler(self):
         VAL = 0
         if controller.MINIPAD_DATA["1"]["rt"] == "1":
@@ -321,6 +341,8 @@ class App(customtkinter.CTk):
 
         ProfileManager.config[f"Profile_{ProfileManager.config['Current']}"]["rt"] = str(VAL)
 
+        self.update_current_status()
+
     def continuous_rapidtrigger_handler(self):
         VAL = 0
         if controller.MINIPAD_DATA["1"]["crt"] == "1":
@@ -336,6 +358,8 @@ class App(customtkinter.CTk):
         controller.MINIPAD_DATA["3"]["crt"] = str(VAL)
 
         ProfileManager.config[f"Profile_{ProfileManager.config['Current']}"]["crt"] = str(VAL)
+
+        self.update_current_status()
 
     def goto_boot_mode(self):
         controller.send_command("boot")
@@ -410,7 +434,7 @@ class App(customtkinter.CTk):
 if __name__ == "__main__":
     controller = MinipadController()
 
-    controller.DEVMODE = True
+    # controller.DEVMODE = True
 
     controller.get_minipad_data()
     controller.get_minipad_repo_data()
@@ -419,4 +443,14 @@ if __name__ == "__main__":
     ProfileManager.load_config()
 
     app = App()
+
+    if not re.match(controller.FIRMWARE_PATTERN, controller.MINIPAD_DATA["firmware"]):
+        print("firmware detect failed")
+        app.firmware_update()
+    else:
+        print(f"firmware detected: {controller.MINIPAD_DATA['firmware']}")
+
+    # if not controller.get_latest_firmware() == VER:
+
+
     app.mainloop()

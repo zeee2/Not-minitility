@@ -13,9 +13,10 @@ class MinipadController:
         self.MINIPAD_DATA = {}
         self.VID, self.PID = [0x0727]*2
         self.BAUDRATE = 115200
-        self.DATA_PATTERN = r"GET hkey(\d+)\.(\w+)=(\w+)"
         self.REPO_DATA = {}
         self.CMD_LIST = []
+        self.DATA_PATTERN = r"GET hkey(\d+)\.(\w+)=(\w+)"
+        self.FIRMWARE_PATTERN = r"\d+\.\d+\.\d+(\-\w+)?"
 
         self.thread = None
 
@@ -52,7 +53,7 @@ class MinipadController:
         self.MINIPAD.write(cmd.encode())
         print(f"sent -> {cmd}")
 
-    def multiple_send_command(self, cmds):
+    def multiple_send_command(self, cmds, status, display=None):
         if not self.thread == None:
             if self.thread.is_alive():
                 self.thread = None
@@ -62,11 +63,23 @@ class MinipadController:
         self.MINIPAD.timeout = 1
 
         def send_command(cmd):
+            cmds.remove(cmd)
+            
             if len(cmd) > 0:
                 print("send command -> " + cmd, end=" ")
                 self.MINIPAD.write(cmd.encode())
                 res = self.MINIPAD.read_until().decode()
                 print(f"| done!")
+
+            if len(cmds) - 2 <= 0:
+                status.configure(text=f"진행중인 작업이 없습니다.")
+
+                if not display == None:
+                    for ele in display:
+                        ele.configure(state="normal")
+            else:
+                status.configure(text=f"{len(cmds) - 2}개의 작업 진행중...")
+
 
         self.thread = threading.Thread(target=lambda: [send_command(cmd) for cmd in cmds])
         self.thread.start()
@@ -98,6 +111,15 @@ class MinipadController:
             self.MINIPAD_DATA[hkey][parameter] = value
 
         self.MINIPAD.close()
+
+    def get_latest_firmware(self):
+        repo_url = "https://api.github.com/repos/zeee2/minitility/tags"
+
+        response = requests.get(repo_url)
+        if response.status_code == 200:
+            tags = response.json()
+            if len(tags) > 0:
+                return tags[0]['name']
 
     def get_minipad_repo_data(self):
         # FOR TEST
