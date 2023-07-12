@@ -11,7 +11,7 @@ from common.minipad import *
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("blue")
 
-VER = "v1.1"
+VER = "v1.2"
 
 
 class App(customtkinter.CTk):
