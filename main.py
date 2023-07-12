@@ -13,6 +13,7 @@ customtkinter.set_default_color_theme("blue")
 
 VER = "v1.1"
 
+
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
@@ -29,13 +30,13 @@ class App(customtkinter.CTk):
         self.grid_rowconfigure((0, 1, 2), weight=1)
 
 
+        # 사이드바
         self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=3)
         self.sidebar_frame.grid_rowconfigure(4, weight=1)
 
         self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="Profile", font=customtkinter.CTkFont(size=20, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
-
 
         self.profile_button_1 = customtkinter.CTkButton(self.sidebar_frame, fg_color="#3B8ED0" if self.currentProfile == 1 else "transparent", text="Profile 1", command=self.profile_handler_1)
         self.profile_button_1.grid(row=1, column=0, padx=20, pady=10)
@@ -51,6 +52,7 @@ class App(customtkinter.CTk):
         self.appearance_mode_optionemenu.grid(row=6, column=0, padx=20, pady=(10, 10))
 
 
+        # 탭 정의
         self.tabview = customtkinter.CTkTabview(self, width=650, height=340)
         self.tabview.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
         self.tabview.add("설정")
@@ -58,10 +60,11 @@ class App(customtkinter.CTk):
         self.tabview.tab("설정").grid_columnconfigure(0, weight=1)
         self.tabview.tab("펌웨어").grid_columnconfigure(0, weight=1)
 
-        self.switch_var1 = customtkinter.StringVar(value="1")
-        self.switch_var2 = customtkinter.StringVar(value="1")
-        self.switch_var3 = customtkinter.StringVar(value="1")
+        self.toggle_rapidtrigger = customtkinter.StringVar(value="1")
+        self.toggle_continuous_rapidtrigger = customtkinter.StringVar(value="1")
+        self.toggle_hid = customtkinter.StringVar(value="1")
 
+        # 설정 탭
         self.tab_setting_actuationpoint_label = customtkinter.CTkLabel(self.tabview.tab("설정"),
                                                                        text=f"입력 지점",
                                                                        font=customtkinter.CTkFont(size=16, weight="bold"))
@@ -88,15 +91,16 @@ class App(customtkinter.CTk):
         self.tab_setting_rapidtrigger_slider_down.grid(row=0, column=5, rowspan=3, padx=(10, 20), pady=0, sticky="nsew")
     
         self.tab_setting_rapidtrigger_trigger = customtkinter.CTkSwitch(self.tabview.tab("설정"), text="래피드트리거",
-                                 variable=self.switch_var1, onvalue="1", offvalue="0", command=self.rapidtrigger_handler)
+                                 variable=self.toggle_rapidtrigger, onvalue="1", offvalue="0", command=self.rapidtrigger_handler)
         self.tab_setting_rapidtrigger_trigger.grid(row=0, column=6, padx=(0, 20), pady=0, sticky="nsew")
         self.tab_setting_continuous_rapidtrigger_trigger = customtkinter.CTkSwitch(self.tabview.tab("설정"), text="지속성 래피드트리거",
-                                 variable=self.switch_var2, onvalue="1", offvalue="0", command=self.continuous_rapidtrigger_handler)
+                                 variable=self.toggle_continuous_rapidtrigger, onvalue="1", offvalue="0", command=self.continuous_rapidtrigger_handler)
         self.tab_setting_continuous_rapidtrigger_trigger.grid(row=1, column=6, padx=(0, 20), pady=0, sticky="nsew")
         self.tab_setting_comfirm = customtkinter.CTkButton(self.tabview.tab("설정"), text="적용하기",fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"), command=self.sendAllCmd)
         self.tab_setting_comfirm.grid(row=2, column=6, rowspan=2, padx=0, pady=(20, 20), sticky="nsew")
 
-
+        
+        # 펌웨어 탭
         self.tab_firmware_ver_label = customtkinter.CTkLabel(self.tabview.tab("펌웨어"),
                                                                        text=f"설치된 버전",
                                                                        height=16,
@@ -120,9 +124,11 @@ class App(customtkinter.CTk):
         self.tab_firmware_auto_update = customtkinter.CTkButton(self.tabview.tab("펌웨어"), height=50, text="자동 업데이트",fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"), command=self.firmware_update)
         self.tab_firmware_auto_update.grid(row=2, column=1, rowspan=2, padx=(0, 40), pady=(10, 0))
 
+        self.tab_firmware_calibration = customtkinter.CTkButton(self.tabview.tab("펌웨어"), height=50, text="보정하기",fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"), command=self.calibrate_handler, state="disabled")
+        self.tab_firmware_calibration.grid(row=4, column=0, padx=(40, 0), pady=(20, 0), sticky="nsw")
         self.tab_firmware_hid_toggler = customtkinter.CTkSwitch(self.tabview.tab("펌웨어"), text="키패드 입력 활성화",
-                                variable=self.switch_var1, onvalue="1", offvalue="0", command=self.hid_handler)
-        self.tab_firmware_hid_toggler.grid(row=3, column=1, rowspan=3, padx=(0, 40), pady=(80, 0))
+                                variable=self.toggle_hid, onvalue="1", offvalue="0", command=self.hid_handler)
+        self.tab_firmware_hid_toggler.grid(row=4, column=1, padx=(0, 40), pady=(20, 0))
 
 
         self.current_status = customtkinter.CTkLabel(self, text="진행중인 작업이 없습니다.", width=500, height=32)
@@ -131,6 +137,7 @@ class App(customtkinter.CTk):
 
         self.appearance_mode_optionemenu.set("Dark")
 
+        # 값 불러오기
         self.profile_button_1.configure(fg_color="#3B8ED0" if ProfileManager.config["Current"] == "1" else "transparent")
         self.profile_button_2.configure(fg_color="#3B8ED0" if ProfileManager.config["Current"] == "2" else "transparent")
         self.profile_button_3.configure(fg_color="#3B8ED0" if ProfileManager.config["Current"] == "3" else "transparent")
@@ -147,6 +154,10 @@ class App(customtkinter.CTk):
             self.tab_setting_continuous_rapidtrigger_trigger.deselect()
         else:
             self.tab_setting_continuous_rapidtrigger_trigger.select()
+        if bool(int(controller.MINIPAD_DATA['1']['hid'])):
+            self.tab_firmware_hid_toggler.select()
+        else:
+            self.tab_firmware_hid_toggler.deselect()
 
     def calculate_x(self, a_val, b_val):
         x = 0.1 + 0.1 * ((a_val - 390) / -10)
@@ -168,9 +179,9 @@ class App(customtkinter.CTk):
         else:
             self.tab_setting_continuous_rapidtrigger_trigger.select()
         if bool(int(controller.MINIPAD_DATA['1']['hid'])):
-            self.tab_firmware_hid_toggler.deselect()
-        else:
             self.tab_firmware_hid_toggler.select()
+        else:
+            self.tab_firmware_hid_toggler.deselect()
 
     def profile_change_after(self):
         # 명령 대기열에 프로필 변경값 저장
@@ -238,10 +249,9 @@ class App(customtkinter.CTk):
     def update_current_status(self):
         self.current_status.configure(text=f"{len(controller.CMD_LIST)}개의 작업 대기중... '적용하기'를 누르면 작업이 진행됩니다.")
 
-    def sendAllCmd(self):
+    def sendAllCmd(self, change_status=True):
         if len(controller.CMD_LIST) <= 0:
             return
-        self.current_status.configure(text=f"{len(controller.CMD_LIST)}개의 작업 진행중...")
         disabled = [self.profile_button_1, self.profile_button_2, self.profile_button_3, self.tab_setting_comfirm]
         for ele in disabled:
             ele.configure(state="disabled")
@@ -251,8 +261,12 @@ class App(customtkinter.CTk):
         for cmd in controller.CMD_LIST:
             commands.append(f"hkey.{cmd} {controller.MINIPAD_DATA['1'][cmd]}")
         commands.append("save")
-        commands.append("change_display_status")
-        controller.multiple_send_command(commands, self.current_status, [self.profile_button_1, self.profile_button_2, self.profile_button_3, self.tab_setting_comfirm])
+        
+        if change_status:
+            self.current_status.configure(text=f"{len(controller.CMD_LIST)}개의 작업 진행중...")
+            controller.multiple_send_command(commands, self.current_status, [self.profile_button_1, self.profile_button_2, self.profile_button_3, self.tab_setting_comfirm])
+        else:
+            controller.multiple_send_command(commands)
 
         controller.CMD_LIST = []
 
@@ -326,12 +340,21 @@ class App(customtkinter.CTk):
         self.update_current_status()
 
     def rapidtrigger_handler(self):
-        VAL = 0
-        if controller.MINIPAD_DATA["1"]["rt"] == "1":
-            VAL = 0
-        else:
-            VAL = 1
+        VAL = self.toggle_rapidtrigger.get()    
 
+        if VAL == "0":
+            if not "crt" in controller.CMD_LIST:
+                controller.CMD_LIST.append("crt")
+
+            self.tab_setting_continuous_rapidtrigger_trigger.deselect()
+            self.tab_setting_continuous_rapidtrigger_trigger.configure(state="disabled")
+            
+            controller.MINIPAD_DATA["1"]["crt"] = str(VAL)
+            controller.MINIPAD_DATA["2"]["crt"] = str(VAL)
+            controller.MINIPAD_DATA["3"]["crt"] = str(VAL)
+        else:
+            self.tab_setting_continuous_rapidtrigger_trigger.configure(state="normal")
+            
         if not "rt" in controller.CMD_LIST:
             controller.CMD_LIST.append("rt")
             
@@ -344,11 +367,7 @@ class App(customtkinter.CTk):
         self.update_current_status()
 
     def continuous_rapidtrigger_handler(self):
-        VAL = 0
-        if controller.MINIPAD_DATA["1"]["crt"] == "1":
-            VAL = 0
-        else:
-            VAL = 1
+        VAL = self.toggle_continuous_rapidtrigger.get() 
 
         if not "crt" in controller.CMD_LIST:
             controller.CMD_LIST.append("crt")
@@ -365,6 +384,10 @@ class App(customtkinter.CTk):
         controller.send_command("boot")
     
     def firmware_update(self):
+        self.current_status.configure(text="펌웨어 업데이트 작업 진행중...")
+
+        time.sleep(1)
+
         print("enter boot mode...")
         controller.send_command("boot")
         
@@ -397,7 +420,7 @@ class App(customtkinter.CTk):
 
         print("setting start...")
         controller.MINIPAD = controller.connect_minipad()
-
+        
         controller.multiple_send_command(
             ["hkey.rt true", 
              "hkey.crt true",
@@ -415,18 +438,26 @@ class App(customtkinter.CTk):
         self.refresh_ui()
         print('refresh ui')
 
+        self.current_status.configure(text="진행중인 작업이 없습니다.")
+        
+    def calibrate_handler(self):
+        self.current_status.configure(text="보정 작업 초기화 진행중...")
+        controller.MINIPAD_DATA["1"]["rest"] = "4095"
+        controller.MINIPAD_DATA["1"]["down"] = "0"
+
+        controller.CMD_LIST.append("rest")
+        controller.CMD_LIST.append("down")
+
+        self.sendAllCmd(False)
+
+        
+
     def hid_handler(self):
         controller.CMD_LIST.append("hid")
-        if bool(int(controller.MINIPAD_DATA['1']['hid'])):
-            self.tab_firmware_hid_toggler.deselect()
-            controller.MINIPAD_DATA["1"]["hid"] = "0"
-            controller.MINIPAD_DATA["2"]["hid"] = "0"
-            controller.MINIPAD_DATA["3"]["hid"] = "0"
-        else:
-            self.tab_firmware_hid_toggler.select()
-            controller.MINIPAD_DATA["1"]["hid"] = "1"
-            controller.MINIPAD_DATA["2"]["hid"] = "1"
-            controller.MINIPAD_DATA["3"]["hid"] = "1"
+
+        controller.MINIPAD_DATA["1"]["hid"] = self.toggle_hid.get()
+        controller.MINIPAD_DATA["2"]["hid"] = self.toggle_hid.get()
+        controller.MINIPAD_DATA["3"]["hid"] = self.toggle_hid.get()
 
         self.sendAllCmd()
 
@@ -434,7 +465,7 @@ class App(customtkinter.CTk):
 if __name__ == "__main__":
     controller = MinipadController()
 
-    # controller.DEVMODE = True
+    controller.DEVMODE = True
 
     controller.get_minipad_data()
     controller.get_minipad_repo_data()
@@ -449,6 +480,7 @@ if __name__ == "__main__":
         app.firmware_update()
     else:
         print(f"firmware detected: {controller.MINIPAD_DATA['firmware']}")
+        
 
     # if not controller.get_latest_firmware() == VER:
 

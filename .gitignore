@@ -164,3 +164,4 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 common/__pycache__/*
+common/__pycache__/minipad.cpython-310.pyc

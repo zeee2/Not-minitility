@@ -15,6 +15,7 @@ class MinipadController:
         self.BAUDRATE = 115200
         self.REPO_DATA = {}
         self.CMD_LIST = []
+        self.TOTAL_CMD_COUNTS = 0
         self.DATA_PATTERN = r"GET hkey(\d+)\.(\w+)=(\w+)"
         self.FIRMWARE_PATTERN = r"\d+\.\d+\.\d+(\-\w+)?"
 
@@ -46,14 +47,13 @@ class MinipadController:
         print(f"sent -> {cmd}")
 
     def send_command(self, cmd):
-        print(self.MINIPAD.is_open)
         if self.MINIPAD is None or not self.MINIPAD.is_open:
             self.MINIPAD = self.connect_minipad()
 
         self.MINIPAD.write(cmd.encode())
         print(f"sent -> {cmd}")
 
-    def multiple_send_command(self, cmds, status, display=None):
+    def multiple_send_command(self, cmds, status=None, display=None):
         if not self.thread == None:
             if self.thread.is_alive():
                 self.thread = None
@@ -62,23 +62,26 @@ class MinipadController:
         self.MINIPAD = self.connect_minipad()
         self.MINIPAD.timeout = 1
 
+        self.TOTAL_CMD_COUNTS = 0
+
         def send_command(cmd):
-            cmds.remove(cmd)
-            
-            if len(cmd) > 0:
+            self.TOTAL_CMD_COUNTS = self.TOTAL_CMD_COUNTS + 1
+
+            if not cmd == None:
                 print("send command -> " + cmd, end=" ")
                 self.MINIPAD.write(cmd.encode())
                 res = self.MINIPAD.read_until().decode()
                 print(f"| done!")
 
-            if len(cmds) - 2 <= 0:
-                status.configure(text=f"진행중인 작업이 없습니다.")
+            if status:
+                if self.TOTAL_CMD_COUNTS >= len(cmds):
+                    status.configure(text=f"진행중인 작업이 없습니다.")
 
-                if not display == None:
-                    for ele in display:
-                        ele.configure(state="normal")
-            else:
-                status.configure(text=f"{len(cmds) - 2}개의 작업 진행중...")
+                    if display:
+                        for ele in display:
+                            ele.configure(state="normal")
+                else:
+                    status.configure(text=f"{len(cmds) - self.TOTAL_CMD_COUNTS}개의 작업 진행중...")
 
 
         self.thread = threading.Thread(target=lambda: [send_command(cmd) for cmd in cmds])
