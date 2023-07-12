@@ -209,9 +209,9 @@ class App(customtkinter.CTk):
         else:
             self.tab_setting_continuous_rapidtrigger_trigger.select()
         if bool(int(controller.MINIPAD_DATA['1']['hid'])):
-            self.tab_firmware_hid_toggler.deselect()
-        else:
             self.tab_firmware_hid_toggler.select()
+        else:
+            self.tab_firmware_hid_toggler.deselect()
 
     def profile_handler_1(self):
         self.profile_button_1.configure(fg_color="#3B8ED0")
