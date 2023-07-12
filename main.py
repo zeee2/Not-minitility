@@ -20,7 +20,7 @@ class App(customtkinter.CTk):
 
         self.currentProfile = 1
 
-        self.title("Minipad Utility (v0.2) *unofficial")
+        self.title("Minipad Utility (v1.2) *unofficial")
         self.geometry(f"{750}x{400}")
         self.resizable(False, False)
 
